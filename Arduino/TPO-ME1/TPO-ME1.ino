@@ -21,8 +21,8 @@ char buffer[6];
 const float cuentaMax = 1023;
 const float cuentaMin = 2;
 
-const float a = 1.0052;
-const float b = -2.591;
+const float a = 1.1734;
+const float b = -21.299;
 #define alpha 0.2
 
 /*******************************
@@ -48,9 +48,11 @@ struct MiEstructura {
 };
 MiEstructura Datos;
 
-float R1 = 33000.0;
-float R2 = 750000.0;
-float At = 10;
+float R1 = 10000.0;
+float R2 = 470000.0;
+float R34 = 9000.0;
+float R58 = 1002.0; 
+float At = (R34+R58)/R58;
 float Ga = (1 + R2/R1); 
 
 void setup() {
@@ -100,19 +102,24 @@ void adcRead(){
   if(aux > samples){
     adc_raw = adc_raw/samples;
     Vrms = Datos.Escala*(filter(adc_raw) * 5.0/1024)*Datos.At/Datos.Av;
-    /* Ajuste de calibración */
-    Vrms = 1.0021*Vrms - 4.7842;
     if(Datos.Escala == EV ){
-      if(Vrms > 2.174){
+      if(Vrms > 1.10){
         strcpy(Datos.buffer, "- - - "); 
       } else{
+        if(Vrms < 0 )
+          Vrms = 0;
         dtostrf(Vrms, 6, 3, Datos.buffer);  // 6 = ancho total, 2 = número de decimales
       }
     } else {
-      if(Vrms > 217.4){
+  /***************** Ajuste de calibración ****************
+  ***/Vrms = a * Vrms + b;/********************************
+  ********************************************************/
+      if(Vrms > 104){
         strcpy(Datos.buffer, "- - - ");
       } else{
-        dtostrf(Vrms, 6, 2, Datos.buffer);  // 6 = ancho total, 2 = número de decimales
+        if(Vrms < 0 )
+          Vrms = 0;
+        dtostrf(Vrms, 6, 1, Datos.buffer);  // 6 = ancho total, 2 = número de decimales
       }
     }
     adc_raw = 0;
@@ -146,18 +153,18 @@ void Escala(){
     case 1: 
       digitalWrite(SEL0, LOW);
       digitalWrite(SEL1, LOW);
-      Serial.println("Escala 200mV");
+      Serial.println("Escala 100mV");
       lcd.setCursor(0,0);
-      lcd.print("  Escala 200mV  "); 
+      lcd.print("  Escala 100mV  "); 
       Datos.Escala = EmV;
       Datos.At = At200mV;
       break;
     case 2: 
       digitalWrite(SEL0, HIGH);
       digitalWrite(SEL1, LOW);
-      Serial.println("Escala de 2V");
+      Serial.println("Escala de 1V");
       lcd.setCursor(0,0);
-      lcd.print("   Escala 2V    "); 
+      lcd.print("   Escala 1V    "); 
       Datos.Escala = EV;
       Datos.At = At2V;
       break;
